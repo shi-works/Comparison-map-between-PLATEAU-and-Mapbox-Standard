@@ -134,6 +134,7 @@
       customAttribution: '<a href="https://github.com/Project-PLATEAU/plateau-streaming-tutorial" target="_blank">PLATEAU配信サービス（試験運用）</a>'
     }));
 
+    // Mapbox Standard
     const afterMap = new mapboxgl.Map({
       container: 'before',
       style: 'mapbox://styles/mapbox/standard-beta',
@@ -164,7 +165,7 @@
     // Attributionを折りたたみ表示
     afterMap.addControl(new mapboxgl.AttributionControl({
       compact: true,
-      customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/gsi-dem-png-elevation-calc" target="_blank">Github</a>） '
+      customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/Comparison-map-between-PLATEAU-and-Mapbox-Standard" target="_blank">Github</a>） '
     }));
 
     const container = '#comparison-container';
