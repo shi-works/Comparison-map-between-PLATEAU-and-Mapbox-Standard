@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>マップ間のスワイプ</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.0-beta.1/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+  <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+  <script src="https://unpkg.com/@loaders.gl/3d-tiles@^2.3.0/dist/dist.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <style>
+    body {
+      overflow: hidden;
+    }
+
+    body * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
+  <link rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css" type="text/css">
+  <div id="comparison-container">
+    <div id="before" class="map"></div>
+    <div id="after" class="map"></div>
+  </div>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2hpd29ya3MiLCJhIjoiY2szeHZjeXJsMDJzdDNsbXczdnN1b3hpNiJ9.VQg_5pGbF1qU_6FZ33Uf4g';
+
+    // 環境光を作成
+    const ambientLight = new deck.AmbientLight({
+      color: [255, 255, 255],
+      intensity: 3.0
+    });
+
+    // 平行ライト作成
+    const directionalLight = new deck.DirectionalLight({
+      color: [255, 255, 255],
+      intensity: 9.0,
+      direction: [-3, -9, -1]
+    });
+
+    // ライティングエフェクトを作成
+    const lightingEffect = new deck.LightingEffect({ ambientLight, directionalLight });
+
+    const beforeMap = new mapboxgl.Map({
+      container: 'after',
+      style: './std.json',
+      center: [139.7645499, 35.6812405],
+      zoom: 16,
+      pitch: 60,
+      bearing: 0,
+      hash: true,
+      attributionControl: false
+    });
+
+    // MapboxOverlayを使ったインターリーブ
+    // PLATEAU 3DTiles
+    const overlay = new deck.MapboxOverlay({
+      interleaved: true,
+      layers: [
+        new deck.Tile3DLayer({
+          id: 'plateau-3d-tiles',
+          // data: 'https://assets.cms.plateau.reearth.io/assets/4f/702958-5009-4d6b-a2e0-157c7e573eb2/13100_tokyo23-ku_2022_3dtiles%20_1_1_op_bldg_13101_chiyoda-ku_lod2_no_texture/tileset.json',
+          data: 'https://assets.cms.plateau.reearth.io/assets/14/b8f886-921d-46d3-9fd4-4f6e568b27d4/13100_tokyo23-ku_2022_3dtiles%20_1_1_op_bldg_13101_chiyoda-ku_lod2/tileset.json',
+          opacity: 1,
+          pickable: true,
+          getColor: [255, 0, 0],
+          // 【参考】https://github.com/nagix/mt3d-plugin-plateau
+          onTilesetLoad: (tileset) => {
+            const { cartographicCenter } = tileset;
+            const [longitude, latitude] = cartographicCenter;
+            console.log(longitude, latitude);
+          },
+          onTileLoad: d => {
+            const { content } = d;
+            if (content && content.gltf && content.gltf.materials) {
+              content.gltf.materials.forEach(material => {
+                if (material.pbrMetallicRoughness) {
+                  // 指定された色に設定
+                  // material.pbrMetallicRoughness.baseColorFactor = [1, 0, 0, 1];
+                  material.pbrMetallicRoughness.baseColorFactor = [37 / 255, 136 / 255, 194 / 255, 1];
+                }
+              });
+            }
+            content.cartographicOrigin.z -= 36.6741 + 3.1;
+          }
+        })
+      ],
+      effects: [
+        lightingEffect
+      ]
+    });
+
+    beforeMap.addControl(overlay);
+
+    // スケール表示
+    beforeMap.addControl(new mapboxgl.ScaleControl({
+      maxWidth: 200,
+      unit: 'metric'
+    }));
+
+    // Attributionを折りたたみ表示
+    beforeMap.addControl(new mapboxgl.AttributionControl({
+      compact: true,
+      customAttribution: '<a href="https://github.com/Project-PLATEAU/plateau-streaming-tutorial" target="_blank">PLATEAU配信サービス（試験運用）</a>'
+    }));
+
+    const afterMap = new mapboxgl.Map({
+      container: 'before',
+      style: 'mapbox://styles/mapbox/standard-beta',
+      center: [139.7645499, 35.6812405],
+      zoom: 16,
+      pitch: 60,
+      bearing: 0,
+      hash: true,
+      attributionControl: false,
+    });
+
+    // ズーム・回転
+    afterMap.addControl(new mapboxgl.NavigationControl());
+
+    // フルスクリーンモードのオンオフ
+    afterMap.addControl(new mapboxgl.FullscreenControl());
+
+    // 現在位置表示
+    afterMap.addControl(new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: false
+      },
+      fitBoundsOptions: { maxZoom: 18 },
+      trackUserLocation: true,
+      showUserLocation: true
+    }));
+
+    // Attributionを折りたたみ表示
+    afterMap.addControl(new mapboxgl.AttributionControl({
+      compact: true,
+      customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/gsi-dem-png-elevation-calc" target="_blank">Github</a>） '
+    }));
+
+    const container = '#comparison-container';
+
+    const map = new mapboxgl.Compare(beforeMap, afterMap, container, {
+    });
+  </script>
+
+</body>
+
+</html>
