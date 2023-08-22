@@ -44,11 +44,31 @@
       bottom: 0;
       width: 100%;
     }
+
+    .corner-text {
+      position: fixed;
+      top: 0;
+      padding: 10px;
+      font-size: 14px;
+      z-index: 1;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    #left-corner {
+      left: 0;
+    }
+
+    #right-corner {
+      right: 0;
+    }
   </style>
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
   <link rel="stylesheet"
     href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css" type="text/css">
   <div id="comparison-container">
+    <div id="left-corner" class="corner-text">3D都市モデルPLATEAU</div>
+    <div id="right-corner" class="corner-text">Mapbox Standard ベータ版</div>
     <div id="before" class="map"></div>
     <div id="after" class="map"></div>
   </div>
@@ -74,12 +94,12 @@
     const beforeMap = new mapboxgl.Map({
       container: 'after',
       style: './std.json',
-      center: [139.7645499, 35.6812405],
+      center: [139.765122, 35.680812],
       zoom: 16,
-      pitch: 60,
-      bearing: 0,
+      pitch: 56,
+      bearing: 54,
       hash: true,
-      attributionControl: false
+      attributionControl: false,
     });
 
     // MapboxOverlayを使ったインターリーブ
@@ -107,7 +127,7 @@
                 if (material.pbrMetallicRoughness) {
                   // 指定された色に設定
                   // material.pbrMetallicRoughness.baseColorFactor = [1, 0, 0, 1];
-                  material.pbrMetallicRoughness.baseColorFactor = [37 / 255, 136 / 255, 194 / 255, 1];
+                  material.pbrMetallicRoughness.baseColorFactor = [116 / 255, 186 / 255, 228 / 255, 1];
                 }
               });
             }
@@ -138,19 +158,19 @@
     const afterMap = new mapboxgl.Map({
       container: 'before',
       style: 'mapbox://styles/mapbox/standard-beta',
-      center: [139.7645499, 35.6812405],
+      center: [139.765122, 35.680812],
       zoom: 16,
-      pitch: 60,
-      bearing: 0,
+      pitch: 56,
+      bearing: 54,
       hash: true,
       attributionControl: false,
     });
 
-    // ズーム・回転
-    afterMap.addControl(new mapboxgl.NavigationControl());
-
-    // フルスクリーンモードのオンオフ
-    afterMap.addControl(new mapboxgl.FullscreenControl());
+    // Attributionを折りたたみ表示
+    afterMap.addControl(new mapboxgl.AttributionControl({
+      compact: true,
+      customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/Comparison-map-between-PLATEAU-and-Mapbox-Standard" target="_blank">Github</a>） '
+    }));
 
     // 現在位置表示
     afterMap.addControl(new mapboxgl.GeolocateControl({
@@ -160,13 +180,13 @@
       fitBoundsOptions: { maxZoom: 18 },
       trackUserLocation: true,
       showUserLocation: true
-    }));
+    }), 'bottom-right');
 
-    // Attributionを折りたたみ表示
-    afterMap.addControl(new mapboxgl.AttributionControl({
-      compact: true,
-      customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/Comparison-map-between-PLATEAU-and-Mapbox-Standard" target="_blank">Github</a>） '
-    }));
+    // フルスクリーンモードのオンオフ
+    afterMap.addControl(new mapboxgl.FullscreenControl(), 'bottom-right');
+
+    // ズーム・回転
+    afterMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
     const container = '#comparison-container';
 
